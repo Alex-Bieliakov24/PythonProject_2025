@@ -27,14 +27,14 @@ class FilmSearcher:
 
         Behavior:
             - Attempts to insert the query into the 'query_logs' table.
-            - Prints an error message if the logging fails.
+            - Raises an exception if the logging fails.
         """
         try:
             self.db_manager.execute_query(
                 "INSERT INTO query_logs (query_text) VALUES (%s)", (query,)
             )
         except Exception as e:
-            print(f"Error logging the query: {e}")
+            raise RuntimeError(f"Error logging the query: {e}")
 
     def search_by_keyword(self, keyword: str) -> List[Tuple]:
         """

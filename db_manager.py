@@ -1,8 +1,6 @@
 import pymysql
 from typing import List, Tuple
-from dotenv import load_dotenv
 import os
-
 
 class DatabaseManager:
     """
@@ -15,8 +13,6 @@ class DatabaseManager:
         Initializes the DatabaseManager by loading environment variables and establishing
         a connection to the MySQL database.
         """
-        # Load environment variables from the .env file
-        load_dotenv()
 
         try:
             # Establish a connection to the MySQL database using credentials from environment variables
@@ -29,11 +25,8 @@ class DatabaseManager:
                 autocommit=False,  # Disable autocommit to manage transactions manually
             )
             self.cursor = self.connection.cursor()  # Create a cursor for executing queries
-            print("Successfully connected to the database.")
         except pymysql.MySQLError as e:
-            # Print an error message if the connection fails and raise the exception
-            print(f"Error connecting to the database: {e}")
-            raise
+            raise RuntimeError(f"Failed to connect to the database: {e}")
 
     def execute_query(self, query: str, params: Tuple = ()) -> List[Tuple]:
         """
@@ -55,13 +48,11 @@ class DatabaseManager:
             else:
                 # Commit changes for non-SELECT queries (e.g., INSERT, UPDATE, DELETE)
                 self.connection.commit()
-                print("Query executed successfully.")
                 return []
         except pymysql.MySQLError as e:
             # Rollback changes if an error occurs during query execution
-            print(f"Error executing query: {e}")
             self.connection.rollback()
-            return []
+            raise RuntimeError(f"Error executing query: {e}")
 
     def close(self):
         """
@@ -70,5 +61,7 @@ class DatabaseManager:
         Ensures that the connection is properly closed when the DatabaseManager instance is no longer in use.
         """
         if self.connection:
-            self.connection.close()  # Close the database connection
-            print("Database connection closed.")
+            try:
+                self.connection.close()  # Close the database connection
+            except pymysql.MySQLError as e:
+                raise RuntimeError(f"Error closing the database connection: {e}")
